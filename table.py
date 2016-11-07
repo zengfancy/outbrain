@@ -17,6 +17,13 @@ class Doc:
     self.entities = entities
     self.topics = topics
 
+class Ad:
+  def __init__():
+    self.ad_id = ad_id
+    self.camp = camp
+    self.doc_id = doc_id
+    self.advertiser = advertiser
+
 '''
 param events: map<display_id, Event>
 param docs: map<doc_id, Doc>

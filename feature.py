@@ -43,6 +43,8 @@ class AdEvent:
 
     return features
 
+  def gen_feature(self, f_type, f_val):
+
 '''
 params features:
 '''
