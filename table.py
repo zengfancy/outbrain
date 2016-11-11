@@ -29,14 +29,26 @@ param events: map<display_id, Event>
 param docs: map<doc_id, Doc>
 '''
 class OutBrainManager:
+  def init(self):
+    self.events = []
+    self.docs = []
+    self.ads = []
+
   def get_event(self, display_id):
     if self.events.has_key(display_id):
       return self.events[display_id]
     else:
       return None
 
-  def get_doc(self.doc_id):
+  def get_doc(self, doc_id):
     if self.docs.has_key(doc_id):
       return self.docs[doc_id]
     else:
       return None
+
+  def get_ad(self, ad_id)
+    if self.ads.has_key(ad_id):
+      return self.ads[ad_id]
+    else:
+      return None
+

@@ -1,4 +1,3 @@
-
 '''
 param val:
 param cfd: confidence, may be None
@@ -17,6 +16,8 @@ class Feature:
     self.name = name
     self.vals = vals
 
+def hash_string(feat_type, feat_val):
+
 '''
 '''
 class AdEvent:
@@ -26,6 +27,7 @@ class AdEvent:
     self.display_id = display_id
 
   def gen_features(self):
+    # generate display features, like uuid, geo, platform, etc
     event = self.manager.get_event(self.display_id)
     features = []
     features.append(gen_feature("uuid", event.uuid))
@@ -33,7 +35,8 @@ class AdEvent:
     features.append(gen_feature("platform", event.platform))
     features.append(gen_feature("timestamp", event.timestamp))
     
-    doc = self.manager.get_doc(self.doc_id)
+    # generate display document features
+    doc = self.manager.get_doc(event.doc_id)
     features.append(gen_feature("doc_source_id", doc.source_id))
     features.append(gen_feature("doc_publisher", doc.publisher))
     features.append(gen_feature("doc_pub_time", doc.pub_time))
@@ -41,9 +44,33 @@ class AdEvent:
     features.extend(gen_feature("doc_entities", doc.entities))
     features.extend(gen_feature("doc_topics", doc.topics))
 
+    # generate ad features
+    ad = self.manager.get_ad(self.ad_id)
+    features.append(gen_feature("ad_camp", ad.camp))
+    features.append(gen_feature("ad_adv", ad.advertiser))
+    # generate ad doc features
+    doc = self.manager.get_doc(ad.doc_id)
+    features.append(gen_feature("ad_doc_source_id", doc.source_id))
+    features.append(gen_feature("ad_doc_publisher", doc.publisher))
+    features.append(gen_feature("ad_doc_pub_time", doc.pub_time))
+    features.extend(gen_feature("ad_doc_cats", doc.cats))
+    features.extend(gen_feature("ad_doc_entities", doc.entities))
+    features.extend(gen_feature("ad_doc_topics", doc.topics))
+
     return features
 
   def gen_feature(self, f_type, f_val):
+    feat_ns = feat_ns[f_type]
+    if f_val is list:
+      feat_vals = []
+      for val in f_val:
+        feat_hash = hash_string(f_type, val)
+        feat_vals.append(FeatVal(feat_ns, feat_hash))
+      return feat_vals
+    else:
+      feat_hash = hash_string(f_type, f_val)
+      return FeatVal(feat_ns, feat_hash)
+       
 
 '''
 params features:
