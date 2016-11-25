@@ -1,4 +1,13 @@
-def hash_string(feat_type, feat_val):
+import OutBrainManager
+
+
+'''
+param feat_type: string
+param feat_val : string
+'''
+def hash_feature(feat_type, feat_val):
+  ns_hash = hash_string(feat_type, 0)
+  return hash_string(feat_val, ns_hash)
 
 '''
 param val:
@@ -79,14 +88,4 @@ class AdEvent:
       return Feature(feat_ns, [FeatVal(feat_hash)])
       
 
-class Trainer:
-  def do_training(self, ad_events):
-    for event in ad_events:
-      features = event.gen_features()
-      self.train_ad_event(event.clicked, features)
 
-  def train_ad_event(self, clicked, features):
-    self.model.update_params(clicked, features)
-
-  def infer_ad_event(self, features):
-    return self.model.infer(features)

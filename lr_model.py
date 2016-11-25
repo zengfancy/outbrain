@@ -1,3 +1,5 @@
+import math
+
 def sigmoid(x):
   return 1 / (1 + exp(-x))
 
@@ -9,7 +11,10 @@ class SparseVec:
     self.index_val_map[index] = val
 
   def update_val(self, index, delta):
-    self.index_val_map[index] += delta
+    if self.index_val_map.has_key(index):
+      self.index_val_map[index] += delta
+    else:
+      self.index_val_map[index] = delta
 
   def get_val(self, index):
     if self.index_val_map.has_key(index):
@@ -19,7 +24,7 @@ class SparseVec:
 
 class LrModel:
   def __init__(self):
-    self.weight_vec = SparseVec
+    self.weight_vec = SparseVec()
     self.b = 0
 
   def update_params(self, clicked, features):
@@ -33,8 +38,9 @@ class LrModel:
     # regularization
     lamb = 0.00001
     for feat in features:
-      delta -= lamb * self.weight_vec.get_val(feat.val)
-      self.weight_vec.update_val(feat.val, delta)
+      w_delta = delta - lamb * self.weight_vec.get_val(feat.val)
+      self.weight_vec.update_val(feat.val, w_delta)
+    self.b += delta - lamb * self.b
 
   def infer(self, features):
     weight_sum = 0
