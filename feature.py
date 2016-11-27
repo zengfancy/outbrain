@@ -1,13 +1,13 @@
-import OutBrainManager
-
+import outbrain_manager
+import feat_hash
 
 '''
 param feat_type: string
 param feat_val : string
 '''
-def hash_feature(feat_type, feat_val):
-  ns_hash = hash_string(feat_type, 0)
-  return hash_string(feat_val, ns_hash)
+def hash_feature(feat_ns, feat_val):
+  ns_hash = feat_hash.hash_string(feat_ns, 0)
+  return feat_hash.hash_string(feat_val, ns_hash)
 
 '''
 param val:
@@ -16,7 +16,10 @@ param cfd: confidence, may be None
 class FeatVal:
   def __init__(self, val, cfd = None):
     self.val = val
-    self.cfd = cfd
+    if cfd:
+      self.cfd = cfd
+    else:
+      self.cfd = 1
 
 '''
 param name:
@@ -27,21 +30,46 @@ class Feature:
     self.name = name
     self.vals = vals
 
+g_ns = {}
+g_ns["uuid"] = "uu"
+g_ns["geo"] = "ge"
+g_ns["platform"] = "pt"
+g_ns["timestamp"] = "ts"
+g_ns["doc_source_id"] = "sc"
+g_ns["doc_publisher"] = "pb"
+g_ns["doc_pub_time"] = "pt"
+g_ns["doc_cats"] = "ct"
+g_ns["doc_entities"] = "en"
+g_ns["doc_topics"] = "tp"
+g_ns["ad_camp"] = "ca"
+g_ns["ad_adv"] = "ad"
+g_ns["ad_doc_source_id"] = "asc"
+g_ns["ad_doc_publishser"] = "apb"
+g_ns["ad_doc_pub_time"] = "apt"
+g_ns["ad_doc_cats"] = "act"
+g_ns["ad_doc_entities"] = "aen"
+g_ns["ad_doc_topics"] = "atp"
+
+def get_feat_ns(f_type):
+  return g_ns[f_type]
 
 '''
 '''
 class AdEvent:
-  def __init__(self):
-    self.ad_id = ad_id
-    self.clicked = clicked
-    self.display_id = display_id
+  '''
+  param click: Click type
+  '''
+  def __init__(self, click):
+    self.ad_id = click.ad_id
+    self.clicked = click.clicked
+    self.display_id = click.display_id
 
   '''
   @return: a list of class Feature
   '''
-  def gen_features(self):
+  def gen_features(self, manager):
     # generate display features, like uuid, geo, platform, etc
-    event = self.manager.get_event(self.display_id)
+    event = manager.get_event(self.display_id)
     features = []
     features.append(gen_feature("uuid", event.uuid))
     features.append(gen_feature("geo", event.geo))
@@ -49,7 +77,7 @@ class AdEvent:
     features.append(gen_feature("timestamp", event.timestamp))
     
     # generate display document features
-    doc = self.manager.get_doc(event.doc_id)
+    doc = manager.get_doc(event.doc_id)
     features.append(gen_feature("doc_source_id", doc.source_id))
     features.append(gen_feature("doc_publisher", doc.publisher))
     features.append(gen_feature("doc_pub_time", doc.pub_time))
@@ -58,17 +86,17 @@ class AdEvent:
     features.append(gen_feature("doc_topics", doc.topics))
 
     # generate ad features
-    ad = self.manager.get_ad(self.ad_id)
+    ad = manager.get_ad(self.ad_id)
     features.append(gen_feature("ad_camp", ad.camp))
     features.append(gen_feature("ad_adv", ad.advertiser))
     # generate ad doc features
-    doc = self.manager.get_doc(ad.doc_id)
+    doc = manager.get_doc(ad.doc_id)
     features.append(gen_feature("ad_doc_source_id", doc.source_id))
     features.append(gen_feature("ad_doc_publisher", doc.publisher))
     features.append(gen_feature("ad_doc_pub_time", doc.pub_time))
-    features.append(gen_feature("ad_doc_cats", doc.cats))
-    features.append(gen_feature("ad_doc_entities", doc.entities))
-    features.append(gen_feature("ad_doc_topics", doc.topics))
+    features.append(gen_ent_topic_cat_feature("ad_doc_cats", doc.cats))
+    features.append(gen_ent_topic_cat_feature("ad_doc_entities", doc.entities))
+    features.append(gen_ent_topic_cat_feature("ad_doc_topics", doc.topics))
 
     return features
 
@@ -76,16 +104,15 @@ class AdEvent:
   @return: class Feature
   '''
   def gen_feature(self, f_type, f_val):
-    feat_ns = feat_ns[f_type]
-    if f_val is list:
-      feat_vals = []
-      for val in f_val:
-        feat_hash = hash_string(f_type, val)
-        feat_vals.append(FeatVal(feat_hash))
+    feat_ns = get_feat_ns(f_type)
+    feat_hash = hash_string(feat_ns, f_val)
+    return Feature(feat_ns, [FeatVal(feat_hash)])
+
+  def gen_ent_topic_cat_feature(self, f_type, f_vals):
+    feat_vals = []
+      for val in f_vals:
+        feat_hash = hash_string(feat_ns, val.id)
+        feat_vals.append(FeatVal(feat_hash, val.cfd))
       return Feature(feat_ns, feat_vals)
-    else:
-      feat_hash = hash_string(f_type, f_val)
-      return Feature(feat_ns, [FeatVal(feat_hash)])
-      
 
 
