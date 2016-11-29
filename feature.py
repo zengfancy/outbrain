@@ -30,6 +30,11 @@ class Feature:
     self.name = name
     self.vals = vals
 
+  def dump(self):
+    print("name:" + self.name)
+    for val in self.vals:
+      print("val:" + str(val.val) + ", cfd:" + str(val.cfd))
+
 g_ns = {}
 g_ns["uuid"] = "uu"
 g_ns["geo"] = "ge"
@@ -44,7 +49,7 @@ g_ns["doc_topics"] = "tp"
 g_ns["ad_camp"] = "ca"
 g_ns["ad_adv"] = "ad"
 g_ns["ad_doc_source_id"] = "asc"
-g_ns["ad_doc_publishser"] = "apb"
+g_ns["ad_doc_publisher"] = "apb"
 g_ns["ad_doc_pub_time"] = "apt"
 g_ns["ad_doc_cats"] = "act"
 g_ns["ad_doc_entities"] = "aen"
@@ -71,32 +76,33 @@ class AdEvent:
     # generate display features, like uuid, geo, platform, etc
     event = manager.get_event(self.display_id)
     features = []
-    features.append(gen_feature("uuid", event.uuid))
-    features.append(gen_feature("geo", event.geo))
-    features.append(gen_feature("platform", event.platform))
-    features.append(gen_feature("timestamp", event.timestamp))
+    features.append(self.gen_feature("uuid", event.uuid))
+    features.append(self.gen_feature("geo", event.geo))
+    features.append(self.gen_feature("platform", event.platform))
+    features.append(self.gen_feature("timestamp", event.timestamp))
     
     # generate display document features
     doc = manager.get_doc(event.doc_id)
-    features.append(gen_feature("doc_source_id", doc.source_id))
-    features.append(gen_feature("doc_publisher", doc.publisher))
-    features.append(gen_feature("doc_pub_time", doc.pub_time))
-    features.append(gen_feature("doc_cats", doc.cats))
-    features.append(gen_feature("doc_entities", doc.entities))
-    features.append(gen_feature("doc_topics", doc.topics))
+    features.append(self.gen_feature("doc_source_id", doc.source_id))
+    features.append(self.gen_feature("doc_publisher", doc.publisher))
+    features.append(self.gen_feature("doc_pub_time", doc.pub_time))
+    features.append(self.gen_feature("doc_cats", doc.cats))
+    features.append(self.gen_feature("doc_entities", doc.entities))
+    features.append(self.gen_feature("doc_topics", doc.topics))
 
     # generate ad features
     ad = manager.get_ad(self.ad_id)
-    features.append(gen_feature("ad_camp", ad.camp))
-    features.append(gen_feature("ad_adv", ad.advertiser))
+    features.append(self.gen_feature("ad_camp", ad.camp))
+    features.append(self.gen_feature("ad_adv", ad.advertiser))
+
     # generate ad doc features
     doc = manager.get_doc(ad.doc_id)
-    features.append(gen_feature("ad_doc_source_id", doc.source_id))
-    features.append(gen_feature("ad_doc_publisher", doc.publisher))
-    features.append(gen_feature("ad_doc_pub_time", doc.pub_time))
-    features.append(gen_ent_topic_cat_feature("ad_doc_cats", doc.cats))
-    features.append(gen_ent_topic_cat_feature("ad_doc_entities", doc.entities))
-    features.append(gen_ent_topic_cat_feature("ad_doc_topics", doc.topics))
+    features.append(self.gen_feature("ad_doc_source_id", doc.source_id))
+    features.append(self.gen_feature("ad_doc_publisher", doc.publisher))
+    features.append(self.gen_feature("ad_doc_pub_time", doc.pub_time))
+    features.append(self.gen_ent_topic_cat_feature("ad_doc_cats", doc.cats))
+    features.append(self.gen_ent_topic_cat_feature("ad_doc_entities", doc.entities))
+    features.append(self.gen_ent_topic_cat_feature("ad_doc_topics", doc.topics))
 
     return features
 
@@ -105,14 +111,37 @@ class AdEvent:
   '''
   def gen_feature(self, f_type, f_val):
     feat_ns = get_feat_ns(f_type)
-    feat_hash = hash_string(feat_ns, f_val)
+    feat_hash = hash_feature(feat_ns, str(f_val))
     return Feature(feat_ns, [FeatVal(feat_hash)])
 
   def gen_ent_topic_cat_feature(self, f_type, f_vals):
+    feat_ns = get_feat_ns(f_type)
     feat_vals = []
-      for val in f_vals:
-        feat_hash = hash_string(feat_ns, val.id)
-        feat_vals.append(FeatVal(feat_hash, val.cfd))
-      return Feature(feat_ns, feat_vals)
+    for val in f_vals:
+      feat_hash = hash_string(feat_ns, val.id)
+      feat_vals.append(FeatVal(feat_hash, val.cfd))
+    return Feature(feat_ns, feat_vals)
+
+if __name__ == '__main__':
+  manager = outbrain_manager.OutBrainManager()
+  if True:
+    manager.events[123] = outbrain_manager.Event(123, "45garerertet646", 345, "geo", 2, 34)
+    manager.docs[345] = outbrain_manager.Doc(345, 12, 4, "2014-12-12")
+    manager.docs[346] = outbrain_manager.Doc(346, 13, 8, "2014-12-12")
+    manager.ads[321] = outbrain_manager.Ad(321, 3, 346, 5)
+  else:
+    manager.read_data_file("data/mini_events.csv", 
+                         "data/mini_clicks_train.csv",
+                         "data/promoted_content.csv",
+                         "data/documents_meta.csv",
+                         "data/documents_entities.csv",
+                         "data/documents_categories.csv",
+                         "data/documents_topics.csv")
+
+  ad = AdEvent(outbrain_manager.Click(123, 321, True))
+  features = ad.gen_features(manager)
+  for feat in features:
+    feat.dump()
+
 
 
