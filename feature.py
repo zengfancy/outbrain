@@ -35,6 +35,49 @@ class Feature:
     for val in self.vals:
       print("val:" + str(val.val) + ", cfd:" + str(val.cfd))
 
+
+def dump_feature(feature):
+  vals_str = ""
+  for val in feature.vals:
+    if val.cfd:
+      vals_str += str(val.val) + '#' + str(val.cfd) + '@'
+    else:
+      vals_str += str(val.val) + '#@'
+  # remove the last '@'
+  if len(vals_str) != 0:
+    vals_str = vals_str[:-1]
+  line = feature.name + '$' + vals_str
+  return line
+
+def dump_features(features):
+  line = ""
+  if len(features) == 0:
+    return ""
+  for feature in features:
+    line += dump_feature(feature) + '^'
+  # remove the last '^'
+  return line[:-1]
+
+def parse_feature(line):
+  [name, vals_str] = line.split('$')
+  val_strs = vals_str.split('@')
+  vals = []
+  for val_str in val_strs:
+    [val, cfd] = val_str.split('#')
+    if cfd and len(cfd) != 0:
+      vals.append(FeatVal(int(val), float(cfd)))
+    else:
+      vals.append(FeatVal(int(val)))
+  return Feature(name, vals)
+
+def parse_features(line):
+  feature_strs = line.split('^')
+  features = []
+  for feature_str in feature_strs:
+    features.append(parse_feature(feature_str))
+  return features
+
+
 g_ns = {}
 g_ns["uuid"] = "uu"
 g_ns["geo"] = "ge"
@@ -133,7 +176,7 @@ if __name__ == '__main__':
     features = ad.gen_features(manager)
     for feat in features:
       feat.dump()
-  else:
+  elif False:
     manager.read_data_file("data/mini_events.csv", 
                          "data/mini_clicks_train.csv",
                          "data/promoted_content.csv",
@@ -166,5 +209,22 @@ if __name__ == '__main__':
         for feat_info in feat_map[val]:
           feat_str += feat_info + "   "
         f.write(feat_str + "\n")
-
+  else:
+    manager.read_data_file("data/mini_events.csv", 
+                         "data/mini_clicks_train.csv",
+                         "data/promoted_content.csv",
+                         "data/documents_meta.csv",
+                         "data/documents_entities.csv",
+                         "data/documents_categories.csv",
+                         "data/documents_topics.csv")
+    with open("features.txt", "w") as f:
+      num = 0
+      for click in manager.clicks:
+        num += 1
+        if num % 100000 == 0:
+          print("finish " + str(num) + " clicks' feature generation...")
+        ad_event = AdEvent(click)
+        features = ad_event.gen_features(manager)
+        line = dump_features(features) + "\n"
+        f.write(line)
 
