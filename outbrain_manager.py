@@ -156,21 +156,21 @@ class OutBrainManager:
       # document_id,entity_id,confidence_level
       # 1524246,f9eec25663db4cd83183f5c805186f16,0.672865314504701
       [doc_id, ent_id, cfd] = line.split(',')
-      if self.docs.has_key(doc_id):
+      if doc_id in self.docs:
         self.docs[doc_id].entities.append(Entity(ent_id, cfd))
 
     def on_read_doc_topic_line(line):
       # document_id,topic_id,confidence_level
       # 1595802,140,0.0731131601068925
       [doc_id, topic_id, cfd] = line.split(',')
-      if self.docs.has_key(doc_id):
+      if doc_id in self.docs:
         self.docs[doc_id].topics.append(Topic(topic_id, cfd))
 
     def on_read_doc_cat_line(line):
       # document_id,category_id,confidence_level
       # 1595802,1611,0.92
       [doc_id, cat_id, cfd] = line.split(',')
-      if self.docs.has_key(doc_id):
+      if doc_id in self.docs:
         self.docs[doc_id].cats.append(Cat(cat_id, cfd))
 
     self._read_file(doc_meta, on_read_doc_meta_line)

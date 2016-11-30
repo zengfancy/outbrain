@@ -118,17 +118,21 @@ class AdEvent:
     feat_ns = get_feat_ns(f_type)
     feat_vals = []
     for val in f_vals:
-      feat_hash = hash_string(feat_ns, val.id)
+      feat_hash = hash_feature(feat_ns, val.id)
       feat_vals.append(FeatVal(feat_hash, val.cfd))
     return Feature(feat_ns, feat_vals)
 
 if __name__ == '__main__':
   manager = outbrain_manager.OutBrainManager()
-  if True:
+  if False:
     manager.events[123] = outbrain_manager.Event(123, "45garerertet646", 345, "geo", 2, 34)
     manager.docs[345] = outbrain_manager.Doc(345, 12, 4, "2014-12-12")
     manager.docs[346] = outbrain_manager.Doc(346, 13, 8, "2014-12-12")
     manager.ads[321] = outbrain_manager.Ad(321, 3, 346, 5)
+    ad = AdEvent(outbrain_manager.Click(123, 321, True))
+    features = ad.gen_features(manager)
+    for feat in features:
+      feat.dump()
   else:
     manager.read_data_file("data/mini_events.csv", 
                          "data/mini_clicks_train.csv",
@@ -138,10 +142,29 @@ if __name__ == '__main__':
                          "data/documents_categories.csv",
                          "data/documents_topics.csv")
 
-  ad = AdEvent(outbrain_manager.Click(123, 321, True))
-  features = ad.gen_features(manager)
-  for feat in features:
-    feat.dump()
+    print("read data file ended!!!")
+    num = 0
+    feat_map = {}
+    for click in manager.clicks:
+      num += 1
+      if num % 100000 == 0:
+        print("finish " + str(num) + " clicks' feature generation...")
+      ad_event = AdEvent(click)
+      features = ad_event.gen_features(manager)
+      for feature in features:
+        feat_info = str(click.ad_id) + "_" + str(click.display_id) + "_" + feature.name
+        for val in feature.vals:
+          if val.val in feat_map.keys():
+            feat_map[val.val].append(feat_info)
+          else:
+            feat_map[val.val] = [feat_info]
 
+    print("generating features ended!!!")
+    with open("abc.txt", "w") as f:
+      for val in feat_map.keys():
+        feat_str = "val:" + str(val) + ", slots:" + str(len(feat_map[val])) + "-"
+        for feat_info in feat_map[val]:
+          feat_str += feat_info + "   "
+        f.write(feat_str + "\n")
 
 
