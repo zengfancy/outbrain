@@ -225,6 +225,6 @@ if __name__ == '__main__':
           print("finish " + str(num) + " clicks' feature generation...")
         ad_event = AdEvent(click)
         features = ad_event.gen_features(manager)
-        line = dump_features(features) + "\n"
+        line = str(ad_event.clicked) + ":" + dump_features(features) + "\n"
         f.write(line)
 
