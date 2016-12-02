@@ -2,11 +2,12 @@ import math
 import feature
 
 def sigmoid(x):
-  return 1 / (1 + exp(-x))
+  return 1 / (1 + math.exp(-x))
 
 class SparseVec:
   def __init__(self):
     self.index_val_map = {}
+    self.index_delta_map = {}
 
   def set_val(self, index, val):
     self.index_val_map[index] = val
@@ -14,8 +15,10 @@ class SparseVec:
   def update_val(self, index, delta):
     if index in self.index_val_map:
       self.index_val_map[index] += delta
+      self.index_delta_map[index].append(delta)
     else:
       self.index_val_map[index] = delta
+      self.index_delta_map[index] = [delta]
 
   '''
   @return: return 0 if not exist
@@ -26,10 +29,30 @@ class SparseVec:
     else:
       return 0
 
+MAX_ITER = 21
+
 class LrModel:
   def __init__(self):
     self.weight_vec = SparseVec()
     self.b = 0
+
+  def save_to_file(self, file_name):
+    with open(file_name, "w") as f:
+      f.write("b:" + str(self.b) + "\n")
+      for index in self.weight_vec.index_val_map:
+        f.write("index:" + str(index) + ", weight:" +
+                str(self.weight_vec.index_val_map[index]) + "\n")
+        f.write("delta:\n")
+        hit_count = len(self.weight_vec.index_delta_map[index]) / MAX_ITER
+        i = 0
+        for delta in self.weight_vec.index_delta_map[index]:
+          f.write('%.4f' % (delta / self.weight_vec.index_val_map[index]))
+          f.write(" ")
+          i += 1
+          if i == hit_count:
+            f.write("\n")
+            i = 0
+        f.write("\n")
 
   def update_params_mini_batch(self, batched_clicked, batched_features, learning_rate, lmbd):
     if len(batched_clicked) != len(batched_features):
@@ -38,9 +61,9 @@ class LrModel:
     ys = []
 
     # learning rate
-#    learning_rate = 0.001
+#    learning_rate = 0.1
     # regularization
-#    lmbd = 0.00001
+#    lmbd = 0.01
 
     for features in batched_features:
       ys.append(self.infer(features))
@@ -62,14 +85,14 @@ class LrModel:
   def update_params(self, clicked, features, learning_rate, lmbd):
     y = self.infer(features)
     # learning rate
-#    learning_rate = 0.001
+#    learning_rate = 0.1
     delta = 0
     if not clicked:
       delta = -learning_rate * y
     else:
       delta = learning_rate * (1 - y)
     # regularization
-#    lmbd = 0.00001
+#    lmbd = 0.01
     for feat in features:
       for val in feat.vals:
         w_delta = delta - lmbd * self.weight_vec.get_val(val.val)
@@ -85,11 +108,5 @@ class LrModel:
         weight_sum += val.cfd * self.weight_vec.get_val(val.val)
     weight_sum += self.b
     return sigmoid(weight_sum)
-
-
-if __name__ == '__main__':
-
-
-
 
 

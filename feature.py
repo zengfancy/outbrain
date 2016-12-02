@@ -60,9 +60,13 @@ def dump_features(features):
 
 def parse_feature(line):
   [name, vals_str] = line.split('$')
+  if len(vals_str) == 0:
+    return None
   val_strs = vals_str.split('@')
   vals = []
   for val_str in val_strs:
+    if len(val_str) == 0:
+      continue
     [val, cfd] = val_str.split('#')
     if cfd and len(cfd) != 0:
       vals.append(FeatVal(int(val), float(cfd)))
@@ -74,7 +78,9 @@ def parse_features(line):
   feature_strs = line.split('^')
   features = []
   for feature_str in feature_strs:
-    features.append(parse_feature(feature_str))
+    feature = parse_feature(feature_str)
+    if feature:
+      features.append(feature)
   return features
 
 
