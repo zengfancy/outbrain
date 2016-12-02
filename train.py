@@ -19,9 +19,9 @@ class Trainer:
     return self.model.infer(features)
 
 MAX_ITER = 21
-
 if __name__ == '__main__':
   trainer = Trainer()
+  trains = 0
   for i in range(MAX_ITER):
     with open('features.txt', 'r') as f:
       if i % 5 == 0 and i > 0:
@@ -38,6 +38,7 @@ if __name__ == '__main__':
         print("auc:" + str(auc.assess(result)))
       else:
         print("training the " + str(i) + "th iteration...")
+        trains += 1
         line = f.readline()
         while line:
           line = line.rstrip()
@@ -47,4 +48,4 @@ if __name__ == '__main__':
           line = f.readline()
 
       
-  trainer.model.save_to_file("model")
+  trainer.model.save_to_file("model", trains)

@@ -29,21 +29,19 @@ class SparseVec:
     else:
       return 0
 
-MAX_ITER = 21
-
 class LrModel:
   def __init__(self):
     self.weight_vec = SparseVec()
     self.b = 0
 
-  def save_to_file(self, file_name):
+  def save_to_file(self, file_name, trains):
     with open(file_name, "w") as f:
       f.write("b:" + str(self.b) + "\n")
       for index in self.weight_vec.index_val_map:
         f.write("index:" + str(index) + ", weight:" +
                 str(self.weight_vec.index_val_map[index]) + "\n")
         f.write("delta:\n")
-        hit_count = len(self.weight_vec.index_delta_map[index]) / MAX_ITER
+        hit_count = len(self.weight_vec.index_delta_map[index]) / trains 
         i = 0
         for delta in self.weight_vec.index_delta_map[index]:
           f.write('%.4f' % (delta / self.weight_vec.index_val_map[index]))
