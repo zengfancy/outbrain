@@ -11,6 +11,7 @@ class SparseVec:
 
   def set_val(self, index, val):
     self.index_val_map[index] = val
+    self.index_delta_map[index] = []
 
   def update_val(self, index, delta):
     if index in self.index_val_map:
@@ -30,15 +31,32 @@ class SparseVec:
       return 0
 
   def get_last_delta(self, index):
-    if index in self.index_delta_map:
+    if index in self.index_delta_map and len(self.index_delta_map[index]) > 0:
       return self.index_delta_map[index][-1]
     else:
       return 0
 
 class LrModel:
-  def __init__(self):
+  def __init__(self, model_file):
     self.weight_vec = SparseVec()
     self.b = 0
+    if model_file:
+      self.load_from_file(model_file)
+
+  def load_from_file(self, model_file):
+    with open(model_file, "r") as f:
+      line = f.readline()
+      fields = line.split(':')
+      self.b = float(fields[1])
+
+      line = f.readline()
+      while line:
+        if line.startswith('index'):
+          fields = line.split(',')
+          [name, index] = fields[0].split(':')
+          [name, weight] = fields[1].split(':')
+          self.weight_vec.set_val(int(index), float(weight))
+        line = f.readline()
 
   def save_to_file(self, file_name, trains):
     with open(file_name, "w") as f:

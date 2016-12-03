@@ -3,10 +3,10 @@ import feature
 import auc
 
 class Trainer:
-  def __init__(self):
-    self.model = lr_model.LrModel()
-    self.learning_rate = 0.05
-    self.lmbd = 0.0001
+  def __init__(self, model_file = None):
+    self.model = lr_model.LrModel(model_file)
+    self.learning_rate = 0.0002
+    self.lmbd = 0 #0.000005
     self.momentum = 0
 
   def train(self, label_feature_list):
@@ -43,9 +43,9 @@ def assess(trainer, file_name):
       line = f.readline()
     print("auc:" + str(auc.assess(result)))
 
-MAX_ITER = 12
+MAX_ITER = 6
 if __name__ == '__main__':
-  trainer = Trainer()
+  trainer = Trainer("model")
   trains = 0
   for i in range(MAX_ITER):
     if i & 1:
