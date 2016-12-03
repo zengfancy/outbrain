@@ -84,6 +84,26 @@ class Click:
     self.ad_id = ad_id
     self.clicked = clicked
 
+#US>ZA>345
+def extract_geo(geo):
+  new_geo = ''
+  l = geo.split('>')
+  for elem in l:
+    if len(elem) > 0 and elem[0] >= 'A' and elem[0] <= 'Z':
+      new_geo += elem
+  return new_geo
+
+#2016-06-05 00:00:00
+def extract_pub_time(pub_time):
+  l = pub_time.split(' ')
+  lst = l[0].split('-')
+  if len(lst) >= 2:
+    return lst[0] + lst[1]
+  elif len(lst) == 1:
+    return lst[0]
+  else:
+    return ''
+
 '''
 param events: map<display_id, Event>
 param docs: map<doc_id, Doc>
@@ -132,6 +152,7 @@ class OutBrainManager:
       # display_id,uuid,document_id,timestamp,platform,geo_location
       # 1,cb8c55702adb93,379743,61,3,US>SC>519
       [display_id, uuid, doc_id, ts , pt, geo] = line.split(',')
+      geo = extract_geo(geo)
       self.events[display_id] = Event(display_id, uuid, doc_id, geo, pt, ts)
       self.doc_id_set[doc_id] = 1
     self._read_file(file_name, on_read_line)
@@ -149,6 +170,7 @@ class OutBrainManager:
       # document_id,source_id,publisher_id,publish_time
       # 1595802,1,603,2016-06-05 00:00:00
       [doc_id, src_id, pub_id, pub_time] = line.split(',')
+      pub_time = extract_pub_time(pub_time)
       if doc_id in self.doc_id_set.keys():
         self.docs[doc_id] = Doc(doc_id, src_id, pub_id, pub_time)
 

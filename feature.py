@@ -58,8 +58,16 @@ def dump_features(features):
   # remove the last '^'
   return line[:-1]
 
+def is_filtered(name):
+  if name == 'pt' or name == 'apt' or name == 'ts':
+    return True
+  else:
+    return False
+
 def parse_feature(line):
   [name, vals_str] = line.split('$')
+  if is_filtered(name):
+    return None
   if len(vals_str) == 0:
     return None
   val_strs = vals_str.split('@')
@@ -215,7 +223,7 @@ if __name__ == '__main__':
         for feat_info in feat_map[val]:
           feat_str += feat_info + "   "
         f.write(feat_str + "\n")
-  else:
+  elif True:
     manager.read_data_file("data/mini_events.csv", 
                          "data/mini_clicks_train.csv",
                          "data/promoted_content.csv",
@@ -229,6 +237,20 @@ if __name__ == '__main__':
         num += 1
         if num % 100000 == 0:
           print("finish " + str(num) + " clicks' feature generation...")
+        ad_event = AdEvent(click)
+        features = ad_event.gen_features(manager)
+        line = str(ad_event.clicked) + ":" + dump_features(features) + "\n"
+        f.write(line)
+  else:
+    manager.read_data_file("data/mini_events_test.csv", 
+                         "data/mini_clicks_test.csv",
+                         "data/promoted_content.csv",
+                         "data/documents_meta.csv",
+                         "data/documents_entities.csv",
+                         "data/documents_categories.csv",
+                         "data/documents_topics.csv")
+    with open("features_test.txt", "w") as f:
+      for click in manager.clicks:
         ad_event = AdEvent(click)
         features = ad_event.gen_features(manager)
         line = str(ad_event.clicked) + ":" + dump_features(features) + "\n"

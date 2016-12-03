@@ -29,6 +29,12 @@ class SparseVec:
     else:
       return 0
 
+  def get_last_delta(self, index):
+    if index in self.index_delta_map:
+      return self.index_delta_map[index][-1]
+    else:
+      return 0
+
 class LrModel:
   def __init__(self):
     self.weight_vec = SparseVec()
@@ -52,7 +58,8 @@ class LrModel:
             i = 0
         f.write("\n")
 
-  def update_params_mini_batch(self, batched_clicked, batched_features, learning_rate, lmbd):
+  def update_params_mini_batch(self, batched_clicked, batched_features,
+                               learning_rate, lmbd, momentum):
     if len(batched_clicked) != len(batched_features):
       print("clicked num != features num. quit")
       return
@@ -76,11 +83,13 @@ class LrModel:
           w_delta = delta - lmbd * self.weight_vec.get_val(val.val)
           # confidence
           w_delta *= val.cfd
+          # momentum
+          w_delta += momentum * self.weight_vec.get_last_delta(val.val)
           self.weight_vec.update_val(val.val, w_delta)
       self.b += delta - lmbd * self.b
 
 
-  def update_params(self, clicked, features, learning_rate, lmbd):
+  def update_params(self, clicked, features, learning_rate, lmbd, momentum):
     y = self.infer(features)
     # learning rate
 #    learning_rate = 0.1
@@ -96,6 +105,8 @@ class LrModel:
         w_delta = delta - lmbd * self.weight_vec.get_val(val.val)
         # confidence
         w_delta *= val.cfd
+        # momentum
+        w_delta += momentum * self.weight_vec.get_last_delta(val.val)
         self.weight_vec.update_val(val.val, w_delta)
     self.b += delta - lmbd * self.b
 
