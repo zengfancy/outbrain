@@ -1,4 +1,5 @@
 import lr_model
+import libfm_model
 import feature
 import auc
 
@@ -8,10 +9,6 @@ class Trainer:
     self.learning_rate = 0.0002
     self.lmbd = 0 #0.000005
     self.momentum = 0
-
-  def train(self, label_feature_list):
-    for label_feature in label_feature_list:
-      self._train_ad_event(label_feature.clicked, label_feature.features)
 
   def train_ad_event(self, clicked, features):
     self.model.update_params(clicked, features, self.learning_rate, self.lmbd,
